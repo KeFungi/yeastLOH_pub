@@ -1,11 +1,62 @@
 library(tidyverse)
 
+WGS_project_tb <-
+  read_csv("tables/project_id.csv")
+
 strain_tb <-
-  read_csv("tables/project_id.csv") %>%
+  WGS_project_tb %>%
   group_by(Description) %>%
   slice(1) %>%
   select(strain=Description) %>%
   ungroup()
+
+WGS_files <-
+  list.files(c("20240821_LOH_wholegenome2/11790-YK", "/Volumes/lsa-tyjames/mycology/next_gen_seq_data/Yeast_LOH/20240722_LOH_wholegenome1/11314-YK"), recursive = TRUE, full.names = TRUE)
+
+project_SRA_tb <-
+  WGS_project_tb %>%
+  select(strain=Description, path) %>%
+  rowwise() %>%
+  mutate(R1_path = basename(str_subset(WGS_files, paste0(path, ".+", "_R1_"))),
+         R2_path = basename(str_subset(WGS_files, paste0(path, ".+", "_R2_")))
+         ) %>%
+  mutate(
+    title = case_when(
+      str_starts(strain, "^CNTRL-") ~ paste0("Loss of Heterozygosity Library of Saccharomyces cerevisiae BY4741 x SK1 control strain: ", strain),
+      TRUE ~ paste0("Loss of Heterozygosity Library of Saccharomyces cerevisiae BY4741 x SK1 induced strain: ", strain)
+    )
+  )
+
+write_csv(project_SRA_tb, "tables/project_SRA.csv")
+
+barseq_fastq_tb <-
+  read_csv("pub_tables/barseq_fastq_path.csv")
+
+barseq_SRA_tb <-
+  barseq_fastq_tb %>%
+  mutate(R1_path=basename(R1_path),
+         R2_path=basename(R2_path)
+  ) %>%
+  filter(!str_starts(experiment, "worm-37C")) %>%
+  mutate(experiment =
+           case_when(
+             str_starts(experiment, "LOH-pool-") ~ str_replace(experiment, "LOH-pool-", "inoculum-media-"),
+             str_starts(experiment, "Worm-pool-") ~ str_replace(experiment, "Worm-pool-", "inoculum-worm-"),
+             TRUE ~ experiment
+           )
+  ) %>%
+  mutate(title =
+           case_when(
+             str_starts(experiment, "inoculum-worm-") ~ paste0("Bar-seq assay for worm inoculum" , ", replicate ", str_match(experiment, "-(\\d+)$")[,2]),
+             str_starts(experiment, "inoculum-media-") ~ paste0("Bar-seq assay for media inoculum" , ", replicate ", str_match(experiment, "-(\\d+)$")[,2]),
+             TRUE ~ paste0("Bar-seq assay in ", str_remove(str_remove(experiment, "-\\d+$"), "-after"), ", replicate ", str_match(experiment, "-(\\d+)$")[,2])
+
+           )
+  ) %>%
+  mutate(passage=str_replace(str_remove(experiment, "-after"), "-(\\d+$)", " replicate \\1"))
+
+write_csv(barseq_SRA_tb, "tables/barseq_SRA.csv")
+
 
 het_tb <-
   read_tsv("tables/genomes.final.vcf.gz.het") %>%

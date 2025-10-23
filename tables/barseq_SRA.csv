@@ -1,0 +1,83 @@
+experiment,R1_path,R2_path,title,passage
+Acidic-after-1,12546-MO-1_TCTCTCTGTT-TTCTTAACGC_S130_R1_001.fastq.gz,12546-MO-1_TCTCTCTGTT-TTCTTAACGC_S130_R2_001.fastq.gz,"Bar-seq assay in Acidic, replicate 1",Acidic replicate 1
+Acidic-after-2,12546-MO-1_TCTCTCTGTT-ACCCAGTATG_S131_R1_001.fastq.gz,12546-MO-1_TCTCTCTGTT-ACCCAGTATG_S131_R2_001.fastq.gz,"Bar-seq assay in Acidic, replicate 2",Acidic replicate 2
+Acidic-after-3,12546-MO-1_TCTCTCTGTT-AACGGCTGGA_S132_R1_001.fastq.gz,12546-MO-1_TCTCTCTGTT-AACGGCTGGA_S132_R2_001.fastq.gz,"Bar-seq assay in Acidic, replicate 3",Acidic replicate 3
+Acidic-after-4,12546-MO-1_TCTCTCTGTT-ATCGTCCGCG_S133_R1_001.fastq.gz,12546-MO-1_TCTCTCTGTT-ATCGTCCGCG_S133_R2_001.fastq.gz,"Bar-seq assay in Acidic, replicate 4",Acidic replicate 4
+Acidic-after-5,12546-MO-1_TCTCTCTGTT-AGCAAGGTCT_S134_R1_001.fastq.gz,12546-MO-1_TCTCTCTGTT-AGCAAGGTCT_S134_R2_001.fastq.gz,"Bar-seq assay in Acidic, replicate 5",Acidic replicate 5
+Acidic-after-6,12546-MO-1_TCTCTCTGTT-ATTCGGTAGT_S135_R1_001.fastq.gz,12546-MO-1_TCTCTCTGTT-ATTCGGTAGT_S135_R2_001.fastq.gz,"Bar-seq assay in Acidic, replicate 6",Acidic replicate 6
+Acidic-after-7,12546-MO-1_TCTCTCTGTT-TCTAAACCCT_S136_R1_001.fastq.gz,12546-MO-1_TCTCTCTGTT-TCTAAACCCT_S136_R2_001.fastq.gz,"Bar-seq assay in Acidic, replicate 7",Acidic replicate 7
+Acidic-after-8,12546-MO-1_TCTCTCTGTT-TAGAGAATGC_S137_R1_001.fastq.gz,12546-MO-1_TCTCTCTGTT-TAGAGAATGC_S137_R2_001.fastq.gz,"Bar-seq assay in Acidic, replicate 8",Acidic replicate 8
+Caffeine-after-1,12546-MO-1_GTTCGGAATT-TTCTTAACGC_S138_R1_001.fastq.gz,12546-MO-1_GTTCGGAATT-TTCTTAACGC_S138_R2_001.fastq.gz,"Bar-seq assay in Caffeine, replicate 1",Caffeine replicate 1
+Caffeine-after-2,12546-MO-1_GTTCGGAATT-ACCCAGTATG_S139_R1_001.fastq.gz,12546-MO-1_GTTCGGAATT-ACCCAGTATG_S139_R2_001.fastq.gz,"Bar-seq assay in Caffeine, replicate 2",Caffeine replicate 2
+Caffeine-after-3,12546-MO-1_GTTCGGAATT-AACGGCTGGA_S140_R1_001.fastq.gz,12546-MO-1_GTTCGGAATT-AACGGCTGGA_S140_R2_001.fastq.gz,"Bar-seq assay in Caffeine, replicate 3",Caffeine replicate 3
+Caffeine-after-4,12546-MO-1_GTTCGGAATT-ATCGTCCGCG_S141_R1_001.fastq.gz,12546-MO-1_GTTCGGAATT-ATCGTCCGCG_S141_R2_001.fastq.gz,"Bar-seq assay in Caffeine, replicate 4",Caffeine replicate 4
+Caffeine-after-5,12546-MO-1_GTTCGGAATT-AGCAAGGTCT_S142_R1_001.fastq.gz,12546-MO-1_GTTCGGAATT-AGCAAGGTCT_S142_R2_001.fastq.gz,"Bar-seq assay in Caffeine, replicate 5",Caffeine replicate 5
+Caffeine-after-6,12546-MO-1_GTTCGGAATT-ATTCGGTAGT_S143_R1_001.fastq.gz,12546-MO-1_GTTCGGAATT-ATTCGGTAGT_S143_R2_001.fastq.gz,"Bar-seq assay in Caffeine, replicate 6",Caffeine replicate 6
+Caffeine-after-7,12546-MO-1_GTTCGGAATT-TCTAAACCCT_S144_R1_001.fastq.gz,12546-MO-1_GTTCGGAATT-TCTAAACCCT_S144_R2_001.fastq.gz,"Bar-seq assay in Caffeine, replicate 7",Caffeine replicate 7
+Caffeine-after-8,12546-MO-1_GTTCGGAATT-TAGAGAATGC_S145_R1_001.fastq.gz,12546-MO-1_GTTCGGAATT-TAGAGAATGC_S145_R2_001.fastq.gz,"Bar-seq assay in Caffeine, replicate 8",Caffeine replicate 8
+H2O2-after-1,12546-MO-1_TGCGTACTAA-TTCTTAACGC_S146_R1_001.fastq.gz,12546-MO-1_TGCGTACTAA-TTCTTAACGC_S146_R2_001.fastq.gz,"Bar-seq assay in H2O2, replicate 1",H2O2 replicate 1
+H2O2-after-2,12546-MO-1_TGCGTACTAA-ACCCAGTATG_S147_R1_001.fastq.gz,12546-MO-1_TGCGTACTAA-ACCCAGTATG_S147_R2_001.fastq.gz,"Bar-seq assay in H2O2, replicate 2",H2O2 replicate 2
+H2O2-after-3,12546-MO-1_TGCGTACTAA-AACGGCTGGA_S148_R1_001.fastq.gz,12546-MO-1_TGCGTACTAA-AACGGCTGGA_S148_R2_001.fastq.gz,"Bar-seq assay in H2O2, replicate 3",H2O2 replicate 3
+H2O2-after-4,12546-MO-1_TGCGTACTAA-ATCGTCCGCG_S149_R1_001.fastq.gz,12546-MO-1_TGCGTACTAA-ATCGTCCGCG_S149_R2_001.fastq.gz,"Bar-seq assay in H2O2, replicate 4",H2O2 replicate 4
+H2O2-after-5,12546-MO-1_TGCGTACTAA-AGCAAGGTCT_S150_R1_001.fastq.gz,12546-MO-1_TGCGTACTAA-AGCAAGGTCT_S150_R2_001.fastq.gz,"Bar-seq assay in H2O2, replicate 5",H2O2 replicate 5
+H2O2-after-6,12546-MO-1_TGCGTACTAA-ATTCGGTAGT_S151_R1_001.fastq.gz,12546-MO-1_TGCGTACTAA-ATTCGGTAGT_S151_R2_001.fastq.gz,"Bar-seq assay in H2O2, replicate 6",H2O2 replicate 6
+H2O2-after-7,12546-MO-1_TGCGTACTAA-TCTAAACCCT_S152_R1_001.fastq.gz,12546-MO-1_TGCGTACTAA-TCTAAACCCT_S152_R2_001.fastq.gz,"Bar-seq assay in H2O2, replicate 7",H2O2 replicate 7
+H2O2-after-8,12546-MO-1_TGCGTACTAA-TAGAGAATGC_S153_R1_001.fastq.gz,12546-MO-1_TGCGTACTAA-TAGAGAATGC_S153_R2_001.fastq.gz,"Bar-seq assay in H2O2, replicate 8",H2O2 replicate 8
+inoculum-media-1,12546-MO-1_CTATCGGAGT-TTCTTAACGC_S154_R1_001.fastq.gz,12546-MO-1_CTATCGGAGT-TTCTTAACGC_S154_R2_001.fastq.gz,"Bar-seq assay for media inoculum, replicate 1",inoculum-media replicate 1
+inoculum-media-2,12546-MO-1_CTATCGGAGT-ACCCAGTATG_S155_R1_001.fastq.gz,12546-MO-1_CTATCGGAGT-ACCCAGTATG_S155_R2_001.fastq.gz,"Bar-seq assay for media inoculum, replicate 2",inoculum-media replicate 2
+inoculum-media-3,12546-MO-1_CTATCGGAGT-AACGGCTGGA_S156_R1_001.fastq.gz,12546-MO-1_CTATCGGAGT-AACGGCTGGA_S156_R2_001.fastq.gz,"Bar-seq assay for media inoculum, replicate 3",inoculum-media replicate 3
+inoculum-media-4,12546-MO-1_CTATCGGAGT-ATCGTCCGCG_S157_R1_001.fastq.gz,12546-MO-1_CTATCGGAGT-ATCGTCCGCG_S157_R2_001.fastq.gz,"Bar-seq assay for media inoculum, replicate 4",inoculum-media replicate 4
+inoculum-media-5,12546-MO-1_CTATCGGAGT-AGCAAGGTCT_S158_R1_001.fastq.gz,12546-MO-1_CTATCGGAGT-AGCAAGGTCT_S158_R2_001.fastq.gz,"Bar-seq assay for media inoculum, replicate 5",inoculum-media replicate 5
+inoculum-media-6,12546-MO-1_CTATCGGAGT-ATTCGGTAGT_S159_R1_001.fastq.gz,12546-MO-1_CTATCGGAGT-ATTCGGTAGT_S159_R2_001.fastq.gz,"Bar-seq assay for media inoculum, replicate 6",inoculum-media replicate 6
+inoculum-media-7,12546-MO-1_CTATCGGAGT-TCTAAACCCT_S160_R1_001.fastq.gz,12546-MO-1_CTATCGGAGT-TCTAAACCCT_S160_R2_001.fastq.gz,"Bar-seq assay for media inoculum, replicate 7",inoculum-media replicate 7
+inoculum-media-8,12546-MO-1_CTATCGGAGT-TAGAGAATGC_S161_R1_001.fastq.gz,12546-MO-1_CTATCGGAGT-TAGAGAATGC_S161_R2_001.fastq.gz,"Bar-seq assay for media inoculum, replicate 8",inoculum-media replicate 8
+SC-after-1,12546-MO-1_AACTTCGTAA-TTCTTAACGC_S162_R1_001.fastq.gz,12546-MO-1_AACTTCGTAA-TTCTTAACGC_S162_R2_001.fastq.gz,"Bar-seq assay in SC, replicate 1",SC replicate 1
+SC-after-2,12546-MO-1_AACTTCGTAA-ACCCAGTATG_S163_R1_001.fastq.gz,12546-MO-1_AACTTCGTAA-ACCCAGTATG_S163_R2_001.fastq.gz,"Bar-seq assay in SC, replicate 2",SC replicate 2
+SC-after-3,12546-MO-1_AACTTCGTAA-AACGGCTGGA_S164_R1_001.fastq.gz,12546-MO-1_AACTTCGTAA-AACGGCTGGA_S164_R2_001.fastq.gz,"Bar-seq assay in SC, replicate 3",SC replicate 3
+SC-after-4,12546-MO-1_AACTTCGTAA-ATCGTCCGCG_S165_R1_001.fastq.gz,12546-MO-1_AACTTCGTAA-ATCGTCCGCG_S165_R2_001.fastq.gz,"Bar-seq assay in SC, replicate 4",SC replicate 4
+SC-after-5,12546-MO-1_AACTTCGTAA-AGCAAGGTCT_S166_R1_001.fastq.gz,12546-MO-1_AACTTCGTAA-AGCAAGGTCT_S166_R2_001.fastq.gz,"Bar-seq assay in SC, replicate 5",SC replicate 5
+SC-after-6,12546-MO-1_AACTTCGTAA-ATTCGGTAGT_S167_R1_001.fastq.gz,12546-MO-1_AACTTCGTAA-ATTCGGTAGT_S167_R2_001.fastq.gz,"Bar-seq assay in SC, replicate 6",SC replicate 6
+SC-after-7,12546-MO-1_AACTTCGTAA-TCTAAACCCT_S168_R1_001.fastq.gz,12546-MO-1_AACTTCGTAA-TCTAAACCCT_S168_R2_001.fastq.gz,"Bar-seq assay in SC, replicate 7",SC replicate 7
+SC-after-8,12546-MO-1_AACTTCGTAA-TAGAGAATGC_S169_R1_001.fastq.gz,12546-MO-1_AACTTCGTAA-TAGAGAATGC_S169_R2_001.fastq.gz,"Bar-seq assay in SC, replicate 8",SC replicate 8
+inoculum-worm-1,12546-MO-1_CTTCAGTGTG-TTCTTAACGC_S170_R1_001.fastq.gz,12546-MO-1_CTTCAGTGTG-TTCTTAACGC_S170_R2_001.fastq.gz,"Bar-seq assay for worm inoculum, replicate 1",inoculum-worm replicate 1
+inoculum-worm-2,12546-MO-1_CTTCAGTGTG-ACCCAGTATG_S171_R1_001.fastq.gz,12546-MO-1_CTTCAGTGTG-ACCCAGTATG_S171_R2_001.fastq.gz,"Bar-seq assay for worm inoculum, replicate 2",inoculum-worm replicate 2
+inoculum-worm-3,12546-MO-1_CTTCAGTGTG-AACGGCTGGA_S172_R1_001.fastq.gz,12546-MO-1_CTTCAGTGTG-AACGGCTGGA_S172_R2_001.fastq.gz,"Bar-seq assay for worm inoculum, replicate 3",inoculum-worm replicate 3
+inoculum-worm-4,12546-MO-1_CTTCAGTGTG-ATCGTCCGCG_S173_R1_001.fastq.gz,12546-MO-1_CTTCAGTGTG-ATCGTCCGCG_S173_R2_001.fastq.gz,"Bar-seq assay for worm inoculum, replicate 4",inoculum-worm replicate 4
+inoculum-worm-5,12546-MO-1_CTTCAGTGTG-AGCAAGGTCT_S174_R1_001.fastq.gz,12546-MO-1_CTTCAGTGTG-AGCAAGGTCT_S174_R2_001.fastq.gz,"Bar-seq assay for worm inoculum, replicate 5",inoculum-worm replicate 5
+inoculum-worm-6,12546-MO-1_CTTCAGTGTG-ATTCGGTAGT_S175_R1_001.fastq.gz,12546-MO-1_CTTCAGTGTG-ATTCGGTAGT_S175_R2_001.fastq.gz,"Bar-seq assay for worm inoculum, replicate 6",inoculum-worm replicate 6
+inoculum-worm-7,12546-MO-1_CTTCAGTGTG-TCTAAACCCT_S176_R1_001.fastq.gz,12546-MO-1_CTTCAGTGTG-TCTAAACCCT_S176_R2_001.fastq.gz,"Bar-seq assay for worm inoculum, replicate 7",inoculum-worm replicate 7
+inoculum-worm-8,12546-MO-1_CTTCAGTGTG-TAGAGAATGC_S177_R1_001.fastq.gz,12546-MO-1_CTTCAGTGTG-TAGAGAATGC_S177_R2_001.fastq.gz,"Bar-seq assay for worm inoculum, replicate 8",inoculum-worm replicate 8
+YPD-30C-after-2,12546-MO-1_ACATGGCCTA-ACCCAGTATG_S178_R1_001.fastq.gz,12546-MO-1_ACATGGCCTA-ACCCAGTATG_S178_R2_001.fastq.gz,"Bar-seq assay in YPD-30C, replicate 2",YPD-30C replicate 2
+YPD-30C-after-1,12546-MO-1_ACATGGCCTA-TTCTTAACGC_S179_R1_001.fastq.gz,12546-MO-1_ACATGGCCTA-TTCTTAACGC_S179_R2_001.fastq.gz,"Bar-seq assay in YPD-30C, replicate 1",YPD-30C replicate 1
+YPD-30C-after-3,12546-MO-1_ACATGGCCTA-AACGGCTGGA_S180_R1_001.fastq.gz,12546-MO-1_ACATGGCCTA-AACGGCTGGA_S180_R2_001.fastq.gz,"Bar-seq assay in YPD-30C, replicate 3",YPD-30C replicate 3
+YPD-30C-after-4,12546-MO-1_ACATGGCCTA-ATCGTCCGCG_S181_R1_001.fastq.gz,12546-MO-1_ACATGGCCTA-ATCGTCCGCG_S181_R2_001.fastq.gz,"Bar-seq assay in YPD-30C, replicate 4",YPD-30C replicate 4
+YPD-30C-after-5,12546-MO-1_ACATGGCCTA-AGCAAGGTCT_S182_R1_001.fastq.gz,12546-MO-1_ACATGGCCTA-AGCAAGGTCT_S182_R2_001.fastq.gz,"Bar-seq assay in YPD-30C, replicate 5",YPD-30C replicate 5
+YPD-30C-after-6,12546-MO-1_ACATGGCCTA-ATTCGGTAGT_S183_R1_001.fastq.gz,12546-MO-1_ACATGGCCTA-ATTCGGTAGT_S183_R2_001.fastq.gz,"Bar-seq assay in YPD-30C, replicate 6",YPD-30C replicate 6
+YPD-30C-after-7,12546-MO-1_ACATGGCCTA-TCTAAACCCT_S184_R1_001.fastq.gz,12546-MO-1_ACATGGCCTA-TCTAAACCCT_S184_R2_001.fastq.gz,"Bar-seq assay in YPD-30C, replicate 7",YPD-30C replicate 7
+YPD-30C-after-8,12546-MO-1_ACATGGCCTA-TAGAGAATGC_S185_R1_001.fastq.gz,12546-MO-1_ACATGGCCTA-TAGAGAATGC_S185_R2_001.fastq.gz,"Bar-seq assay in YPD-30C, replicate 8",YPD-30C replicate 8
+YPD-30C-after-35cyc-1,12546-MO-1_TGTCAGATTC-AGCAAGGTCT_S186_R1_001.fastq.gz,12546-MO-1_TGTCAGATTC-AGCAAGGTCT_S186_R2_001.fastq.gz,"Bar-seq assay in YPD-30C-35cyc, replicate 1",YPD-30C-35cyc replicate 1
+YPD-30C-after-35cyc-2,12546-MO-1_CTATCGGAGT-AAGCTGCCTA_S187_R1_001.fastq.gz,12546-MO-1_CTATCGGAGT-AAGCTGCCTA_S187_R2_001.fastq.gz,"Bar-seq assay in YPD-30C-35cyc, replicate 2",YPD-30C-35cyc replicate 2
+YPD-30C-after-35cyc-3,12546-MO-1_CTATCGGAGT-ATTTGTGGGT_S188_R1_001.fastq.gz,12546-MO-1_CTATCGGAGT-ATTTGTGGGT_S188_R2_001.fastq.gz,"Bar-seq assay in YPD-30C-35cyc, replicate 3",YPD-30C-35cyc replicate 3
+YPD-30C-after-35cyc-4,12546-MO-1_CTATCGGAGT-TACATGGAGC_S189_R1_001.fastq.gz,12546-MO-1_CTATCGGAGT-TACATGGAGC_S189_R2_001.fastq.gz,"Bar-seq assay in YPD-30C-35cyc, replicate 4",YPD-30C-35cyc replicate 4
+YPD-30C-after-35cyc-5,12546-MO-1_CTATCGGAGT-GCCTCAGCAG_S190_R1_001.fastq.gz,12546-MO-1_CTATCGGAGT-GCCTCAGCAG_S190_R2_001.fastq.gz,"Bar-seq assay in YPD-30C-35cyc, replicate 5",YPD-30C-35cyc replicate 5
+YPD-30C-after-35cyc-6,12546-MO-1_CTATCGGAGT-AGTCGAACGA_S191_R1_001.fastq.gz,12546-MO-1_CTATCGGAGT-AGTCGAACGA_S191_R2_001.fastq.gz,"Bar-seq assay in YPD-30C-35cyc, replicate 6",YPD-30C-35cyc replicate 6
+YPD-30C-after-35cyc-7,12546-MO-1_CTATCGGAGT-GGTTGCCCTG_S192_R1_001.fastq.gz,12546-MO-1_CTATCGGAGT-GGTTGCCCTG_S192_R2_001.fastq.gz,"Bar-seq assay in YPD-30C-35cyc, replicate 7",YPD-30C-35cyc replicate 7
+YPD-30C-after-35cyc-8,12546-MO-1_CTATCGGAGT-ATCTTGGAGT_S193_R1_001.fastq.gz,12546-MO-1_CTATCGGAGT-ATCTTGGAGT_S193_R2_001.fastq.gz,"Bar-seq assay in YPD-30C-35cyc, replicate 8",YPD-30C-35cyc replicate 8
+YPD-37C-after-1,12546-MO-1_AAGGCTCAGC-TTCTTAACGC_S194_R1_001.fastq.gz,12546-MO-1_AAGGCTCAGC-TTCTTAACGC_S194_R2_001.fastq.gz,"Bar-seq assay in YPD-37C, replicate 1",YPD-37C replicate 1
+YPD-37C-after-2,12546-MO-1_AAGGCTCAGC-ACCCAGTATG_S195_R1_001.fastq.gz,12546-MO-1_AAGGCTCAGC-ACCCAGTATG_S195_R2_001.fastq.gz,"Bar-seq assay in YPD-37C, replicate 2",YPD-37C replicate 2
+YPD-37C-after-3,12546-MO-1_AAGGCTCAGC-AACGGCTGGA_S196_R1_001.fastq.gz,12546-MO-1_AAGGCTCAGC-AACGGCTGGA_S196_R2_001.fastq.gz,"Bar-seq assay in YPD-37C, replicate 3",YPD-37C replicate 3
+YPD-37C-after-4,12546-MO-1_AAGGCTCAGC-ATCGTCCGCG_S197_R1_001.fastq.gz,12546-MO-1_AAGGCTCAGC-ATCGTCCGCG_S197_R2_001.fastq.gz,"Bar-seq assay in YPD-37C, replicate 4",YPD-37C replicate 4
+YPD-37C-after-5,12546-MO-1_AAGGCTCAGC-AGCAAGGTCT_S198_R1_001.fastq.gz,12546-MO-1_AAGGCTCAGC-AGCAAGGTCT_S198_R2_001.fastq.gz,"Bar-seq assay in YPD-37C, replicate 5",YPD-37C replicate 5
+YPD-37C-after-6,12546-MO-1_AAGGCTCAGC-ATTCGGTAGT_S199_R1_001.fastq.gz,12546-MO-1_AAGGCTCAGC-ATTCGGTAGT_S199_R2_001.fastq.gz,"Bar-seq assay in YPD-37C, replicate 6",YPD-37C replicate 6
+YPD-37C-after-7,12546-MO-1_AAGGCTCAGC-TCTAAACCCT_S200_R1_001.fastq.gz,12546-MO-1_AAGGCTCAGC-TCTAAACCCT_S200_R2_001.fastq.gz,"Bar-seq assay in YPD-37C, replicate 7",YPD-37C replicate 7
+YPD-37C-after-8,12546-MO-1_AAGGCTCAGC-TAGAGAATGC_S201_R1_001.fastq.gz,12546-MO-1_AAGGCTCAGC-TAGAGAATGC_S201_R2_001.fastq.gz,"Bar-seq assay in YPD-37C, replicate 8",YPD-37C replicate 8
+worm-20C-1,12546-MO-1_TGCCAACCAG-TTCTTAACGC_S202_R1_001.fastq.gz,12546-MO-1_TGCCAACCAG-TTCTTAACGC_S202_R2_001.fastq.gz,"Bar-seq assay in worm-20C, replicate 1",worm-20C replicate 1
+worm-20C-2,12546-MO-1_TGCCAACCAG-ACCCAGTATG_S203_R1_001.fastq.gz,12546-MO-1_TGCCAACCAG-ACCCAGTATG_S203_R2_001.fastq.gz,"Bar-seq assay in worm-20C, replicate 2",worm-20C replicate 2
+worm-20C-3,12546-MO-1_TGCCAACCAG-AACGGCTGGA_S204_R1_001.fastq.gz,12546-MO-1_TGCCAACCAG-AACGGCTGGA_S204_R2_001.fastq.gz,"Bar-seq assay in worm-20C, replicate 3",worm-20C replicate 3
+worm-20C-4,12546-MO-1_TGCCAACCAG-ATCGTCCGCG_S205_R1_001.fastq.gz,12546-MO-1_TGCCAACCAG-ATCGTCCGCG_S205_R2_001.fastq.gz,"Bar-seq assay in worm-20C, replicate 4",worm-20C replicate 4
+worm-20C-5,12546-MO-1_TGCCAACCAG-AGCAAGGTCT_S206_R1_001.fastq.gz,12546-MO-1_TGCCAACCAG-AGCAAGGTCT_S206_R2_001.fastq.gz,"Bar-seq assay in worm-20C, replicate 5",worm-20C replicate 5
+worm-20C-6,12546-MO-1_TGCCAACCAG-ATTCGGTAGT_S207_R1_001.fastq.gz,12546-MO-1_TGCCAACCAG-ATTCGGTAGT_S207_R2_001.fastq.gz,"Bar-seq assay in worm-20C, replicate 6",worm-20C replicate 6
+worm-20C-7,12546-MO-1_TGCCAACCAG-TCTAAACCCT_S208_R1_001.fastq.gz,12546-MO-1_TGCCAACCAG-TCTAAACCCT_S208_R2_001.fastq.gz,"Bar-seq assay in worm-20C, replicate 7",worm-20C replicate 7
+worm-20C-8,12546-MO-1_TGCCAACCAG-TAGAGAATGC_S209_R1_001.fastq.gz,12546-MO-1_TGCCAACCAG-TAGAGAATGC_S209_R2_001.fastq.gz,"Bar-seq assay in worm-20C, replicate 8",worm-20C replicate 8
+worm-20C-9,12546-MO-1_TAAGAAGCAG-TTCTTAACGC_S210_R1_001.fastq.gz,12546-MO-1_TAAGAAGCAG-TTCTTAACGC_S210_R2_001.fastq.gz,"Bar-seq assay in worm-20C, replicate 9",worm-20C replicate 9
+worm-20C-10,12546-MO-1_TAAGAAGCAG-ACCCAGTATG_S211_R1_001.fastq.gz,12546-MO-1_TAAGAAGCAG-ACCCAGTATG_S211_R2_001.fastq.gz,"Bar-seq assay in worm-20C, replicate 10",worm-20C replicate 10
