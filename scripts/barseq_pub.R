@@ -9,6 +9,7 @@ library(tidyverse)
 library(qtl)
 library(qtl2)
 library(qtl2convert)
+library(multcompView)
 
 #### functions ####
 rc <-
@@ -526,15 +527,42 @@ fitness_readable_tb <-
 
 write_csv(fitness_readable_tb, "tables/fitness_by_strain_treatment.csv")
 
-exp_tb %>%
+sd_strain_tb <-
+  exp_tb %>%
+  filter(treatment %in% exp_treatments) %>%
+  mutate(treatment=str_replace_all(treatment, "-", "_")) %>%
   group_by(strain, treatment) %>%
   summarise(
-    mean_s=round(inlier_mean(s),3),
     sd=round(inlier_sd(s), 3)
   ) %>%
-  ungroup() %>%
+  ungroup()
+
+sd_anova <- aov(sd ~ treatment, data = sd_strain_tb)
+sd_tukey <- TukeyHSD(sd_anova)
+sd_cld <-
+  multcompLetters(sd_tukey$treatment[,"p adj"]) %>%
+  .$Letters %>%
+  enframe() %>%
+  rename(treatment=name,
+         letters=value)
+
+sd_labels <-
+  sd_strain_tb %>%
+  group_by(treatment) %>%
+  summarise(
+    y = max(sd)
+  ) %>%
+  left_join(sd_cld)
+
+sd_strain_tb %>%
   ggplot(aes(x=treatment, y=sd)) +
   geom_boxplot() +
+  geom_text(
+    data = sd_labels, # Use our new data frame
+    aes(x = treatment, y = 0, label = letters),
+    vjust = 1,
+    fontface = "bold"
+  ) +
   ylab("standard deviation")
 
 ggsave("plots/sd_box.pdf", width = 8, height = 6)
@@ -972,11 +1000,12 @@ LOH_stat_plot1 <-
   rename(`Cumulative LOH lenghth`=LOH_length) %>%
   group_by(strain, type) %>%
   mutate(
-    bin = cut(`Cumulative LOH lenghth`, breaks = c(0, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7), include.lowest = TRUE)
+    bin = cut(`Cumulative LOH lenghth`, breaks = c(0, 1e-10, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7), include.lowest = TRUE)
   ) %>%
   ungroup() %>%
   count(bin, type) %>%
   complete(bin, type, fill=list(n=0)) %>%
+  mutate(bin=case_match(bin, "[0,1e-10]" ~ "(0,0]", "(1e-10,10]" ~ "(0,10]", .default=bin)) %>%
   mutate(type=factor(type, levels=c("BY4741", "both", "SK1"))) %>%
   ggplot(aes(x=bin, y=n, fill=type)) +
   geom_bar(stat = "identity", position = position_dodge(width = 0.5), width = 0.5) +
@@ -984,7 +1013,7 @@ LOH_stat_plot1 <-
   theme_linedraw() +
   theme(legend.position = "none", plot.margin = unit(c(0.1, 0.1, 0.1, 0.1), "inch"),
         axis.text.x = element_text(angle=30, hjust = 1)) +
-  xlab("Cumulative LOH Length") +
+  xlab("Cumulative LOH Length in Strains") +
   ylab("count")
 
 LOH_stat_plot2 <-
@@ -1026,7 +1055,7 @@ LOH_stat_plot3 <-
   scale_x_continuous(breaks = seq(0, 10, 2)) +
   theme_linedraw() +
   theme(legend.position = "none", plot.margin = unit(c(0.1, 0.1, 0.5, 0.1), "inch")) +
-  xlab("Number of LOH") +
+  xlab("Number of LOH in Strains") +
   ylab("count")
 
 LOH_stat_legend1 <-
@@ -1069,7 +1098,7 @@ LOH_stat_plot <-
 ggsave("plots/LOH_stat.pdf", width = 11, height = 8)
 
 dir.create("top5_list")
-for (treatment in exp_treatments){
+for (treatment in exp_treatments[-7]){
   rank_tb %>%
     rowwise() %>%
     mutate(pick=treatment %in% top5_in_vector) %>%
@@ -1091,7 +1120,7 @@ for (treatment in exp_treatments){
 }
 
 top5_bed_tb <-
-  tibble(treatment=exp_treatments) %>%
+  tibble(treatment=exp_treatments[-7]) %>%
   mutate(fordbed=map(treatment, ~as_tibble(read_bed_graph(paste0("top5_list/LOH.", .x, ".bedgraph")))),
          revbed=map(treatment, ~as_tibble(read_bed_graph(paste0("top5_list/revLOH.", .x, ".bedgraph")))),
          bed=map2(fordbed, revbed, ~rbind(mutate(.x, type="SK1"), mutate(.y, type="BY4741")))) %>%
@@ -1101,7 +1130,7 @@ top5_bed_tb <-
   mutate(lodindex="depth", col="transparent", chr=str_remove(chr, "chr"))
 
 top5_overlap_plots <-
-map(exp_treatments, .f=function(x){
+map(exp_treatments[-7], .f=function(x){
   top5_bed_tb %>%
     filter(treatment == x) %>%
     ggplot_peaks(map, gap=25, bgcolor="gray90", altbgcolor="gray85", tick_height = 0.8) +
