@@ -32,6 +32,10 @@ barcode frequency counting by *bartender*
 # ref/
 reference genome and sequences  
 
+# bwa_haplotypecaller_finalvcf/
+SNP genotypes of the parental and created strains for inferring LOH regions  
+
+
 
 
 

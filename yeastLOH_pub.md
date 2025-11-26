@@ -331,7 +331,9 @@ vcftools --gzvcf bwa_haplotypecaller_finalvcf/genomes.final.vcf.gz --depth --out
 # exclude haploid samples
 gatk SelectVariants  --exclude-sample-name P3-4H --exclude-sample-name CNTRL-1F --exclude-sample-name P1-11F --exclude-sample-name P1-7B --exclude-sample-name P2-2D -R ref/S288C.chr.fasta.gz -V bwa_haplotypecaller_finalvcf/genomes.final.vcf.gz -O bwa_haplotypecaller_finalvcf/runs.diploid.vcf.gz
 
-bcftools query -H -f '%CHROM\t%POS\t[%GT\t]\n' bwa_haplotypecaller_finalvcf/runs.diploid.vcf.gz | gzip -c > bwa_haplotypecaller_finalvcf/runs.diploid.vcf.tsv.gz
+bcftools annotate -x ^FORMAT/GT bwa_haplotypecaller_finalvcf/runs.diploid.vcf.gz | bgzip -c > bwa_haplotypecaller_finalvcf/runs.diploid.GTonly.vcf.gz
+bcftools query -H -f '%CHROM\t%POS\t[%GT\t]\n' bwa_haplotypecaller_finalvcf/runs.diploid.GTonly.vcf.gz | gzip -c > bwa_haplotypecaller_finalvcf/runs.diploid.vcf.tsv.gz
+
 ```
 
 # Appendix: strains excluded
