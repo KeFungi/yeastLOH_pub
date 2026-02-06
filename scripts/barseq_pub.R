@@ -1,3 +1,4 @@
+# Library
 library(plyranges)
 library(tidytext)
 library(khroma)
@@ -11,7 +12,7 @@ library(qtl2)
 library(qtl2convert)
 library(multcompView)
 
-#### functions ####
+# helper functions
 rc <-
   function(seq){
     seq %>%
@@ -144,7 +145,7 @@ ggplot_peaks <-
   }
 
 
-#### data input ####
+# data input
 input_tb <-
   read_csv("tables/bartender_matrix.csv") %>%
   rowwise() %>%
@@ -301,6 +302,8 @@ good_bc_tb <-
   select(-barcode,-`barcode length`) %>%
   relocate(strain)
 
+# calculate fitness
+## initial freq
 barseq_long_tb <-
   good_bc_tb %>%
   pivot_longer(-1, values_to = "count") %>%
@@ -378,6 +381,7 @@ media_pool_tb %>%
 
 ggsave("plots/freq_mean_compare_3.png", width = 12, height = 7)
 
+## after freq and fitness
 media_tb <-
   barseq_long_tb %>%
   filter(!str_detect(name, "worm")) %>%
@@ -501,6 +505,7 @@ fit_stat_tb <-
   ) %>%
   pivot_longer(-1, names_to = "treatment", values_to = "mean_s")
 
+## final fitness
 fit_tb <-
   rbind(fit_exp_tb, fit_stat_tb) %>%
   group_by(treatment) %>%
@@ -511,6 +516,7 @@ fit_tb <-
 
 write_csv(fit_tb, "tables/fit_tb.csv")
 
+## fitness output table
 fitness_readable_tb <-
   exp_tb %>%
   left_join(select(LOH_wide_tb, strain, `n_LOH-both`)) %>%
@@ -602,6 +608,7 @@ fit_tb %>%
   scale_color_muted() +
   coord_fixed()
 
+### fitness hist
 fit_tb %>%
   filter(!str_detect(strain, "^CNTRL-")) %>%
   filter(treatment %in% c(exp_treatments, "(average)")) %>%
@@ -626,6 +633,7 @@ fit_tb %>%
 
 ggsave("plots/fitness_hist.pdf", width = 10, height = 8)
 
+### fitness single hist
 fit_tb %>%
   filter(!str_detect(strain, "^CNTRL-")) %>%
   filter(treatment %in% c(exp_treatments, "(average)")) %>%
@@ -708,6 +716,7 @@ rbind(fit_test1, fit_test2) %>%
 
 ggsave("plots/fitness_hist_compare2.pdf", width = 12, height = 6)
 
+### report highest fitness gain for each treatment
 fit_tb %>%
   filter(!str_detect(strain, "^CNTRL-")) %>%
   filter(!treatment=="YPD-30C-after-35cyc") %>%
@@ -715,6 +724,8 @@ fit_tb %>%
   group_by(treatment) %>%
   summarise(max(mean_s))
 
+
+### LOH len vs fitness
 fit_tb %>%
   filter(!str_detect(strain, "^CNTRL-")) %>%
   filter(treatment %in% c(exp_treatments, "(average)")) %>%
@@ -756,6 +767,7 @@ fit_tb %>%
 
 ggsave("plots/fitness_vs_LOHlen_by_type.pdf", width = 14, height = 6)
 
+### top strain fitness across environemts
 rank_tb <-
   fit_tb %>%
   filter(!str_detect(strain, "^CNTRL-")) %>%
@@ -791,6 +803,8 @@ exp_tb %>%
 
 ggsave("plots/barseq_tops_enrichment.pdf", height = 8, width = 10)
 
+
+# pleiotropy analysis
 pleiotropy_tb <-
   fit_tb %>%
   filter(!str_detect(strain, "^CNTRL-")) %>%
@@ -918,6 +932,7 @@ LOH_long_tb %>%
   summarise(across(-strain, .fns = list(mean=mean, median=median, sd=sd, min=min, max=max))) %>%
   knitr::kable()
 
+### barseq stats
 barseq_stats <-
   good_bc_tb %>%
   pivot_longer(-strain) %>%
@@ -933,6 +948,8 @@ barseq_stats <-
 
 write_csv(barseq_stats, "tables/barseq_stats.csv")
 
+
+# QTL
 cM_unit <- 30/1e6
 
 pheno_tb <-
@@ -992,6 +1009,7 @@ out <- scan1(pr, cross2$pheno)
 operm <- scan1perm(pr, cross2$pheno, n_perm=1000)
 summary(operm)
 
+# LOH stat and map on chromosome
 LOH_stat_plot1 <-
   LOH_long_tb %>%
   filter(!strain %in% control_strains) %>%
@@ -1097,6 +1115,8 @@ LOH_stat_plot <-
 
 ggsave("plots/LOH_stat.pdf", width = 11, height = 8)
 
+
+# collect top5 strain LOH bed
 dir.create("top5_list")
 for (treatment in exp_treatments[-7]){
   rank_tb %>%
@@ -1140,6 +1160,7 @@ map(exp_treatments[-7], .f=function(x){
     scale_fill_muted()
 })
 
+# QTL plots
 par(mar=c(5.1, 4.1, 1.1, 1.1))
 pdf(file = "plots/QTL_all.pdf", width = 11, height = 6)
 ymx <- maxlod(out) # overall maximum LOD score
