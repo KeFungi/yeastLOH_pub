@@ -9,7 +9,11 @@ seqkit grep -n -r -p ".*\[chromosome=.+\].*" S288C_reference_genome_R64-5-1_2024
 samtools faidx ref/S288C.chr.fasta.gz
 picard CreateSequenceDictionary -R ref/S288C.chr.fasta.gz -O ref/S288C.chr.dict
 
-gzip -c -d S288C_reference_genome_R64-5-1_20240529/saccharomyces_cerevisiae_R64-5-1_20240529.gff.gz | awk -F $'\t' -v OFS=$'\t' '$3 == "centromere" {print $1, $4-1, $5, $3}' > ref/centromere.bed
+gzip -c -d ref/saccharomyces_cerevisiae_R64-5-1_20240529.gff.gz | awk -F $'\t' -v OFS=$'\t' '$3 == "centromere" {print $1, $4-1, $5, $3}' > ref/centromere.bed
+gzip -c -d ref/saccharomyces_cerevisiae_R64-5-1_20240529.gff.gz | awk -F $'\t' -v OFS=$'\t' '$3 == "centromere" || $3 == "centromere_DNA_Element_I" || $3 == "centromere_DNA_Element_II" || $3 == "centromere_DNA_Element_III" || $3 == "long_terminal_repeat" || $3 == "LTR_retrotransposon" || $3 == "telomere" || $3 == "telomeric_repeat" || $3 == "transposable_element_gene" || $3 == "W_region" || $3 == "X_element" || $3 == "X_element_combinatorial_repeat" || $3 == "X_region" || $3 == "Y_prime_element" || $3 == "Y_region" || $3 == "Z1_region" || $3 == "Z2_region" {print $1, $4-1, $5, $3}' > ref/repeat_elements.bed
+
+bedtools flank -i ref/repeat_elements.bed -g <(awk -v OFS='\t' '{print $1, $2}' ref/S288C.chr.fasta.gz.fai) -b 1000 > ref/repeat_elements_flanked.bed
+
 ```
 
 # copy data
@@ -44,7 +48,7 @@ names=( $(csvtk cut -f 3 -U tables/project_id.csv) )
 for i in ${!names[@]}; do
     f1="cutadapt/${names[$i]}_R1.trim.fastq.gz"
     f2="cutadapt/${names[$i]}_R2.trim.fastq.gz"
-    sbatch -J bwa -A tyjames0 -t 24:00:00 --mem=2g -o bwa_mapping/${names[$i]}.genome.log --wrap="bwa mem ref/S288C.chr.fasta.gz $f1 $f2 > bwa_mapping/${names[$i]}.genome.sam"
+    sbatch -J bwa -A tyjames0 -t 4:00:00 --mem=2g -o bwa_mapping/${names[$i]}.genome.log --wrap="bwa mem ref/S288C.chr.fasta.gz $f1 $f2 > bwa_mapping/${names[$i]}.genome.sam"
 done
 
 names=( $(csvtk cut -f 3 -U tables/project_id.csv) )
@@ -301,7 +305,6 @@ vcftools --gzvcf bwa_haplotypecaller_gvcf/runs.hardfilter.vcf.gz --depth --out b
 
 gatk VariantFiltration -R ref/S288C.chr.fasta.gz -V bwa_haplotypecaller_gvcf/runs.raw.vcf.gz -O bwa_haplotypecaller_gvcf/runs.hardfilter.vcf.gz --filter-name hard_filters --filter-expression 'BaseQRankSum<-5.0 || BaseQRankSum>5.0 || MQ<59.0 || QD<5.0 || FS>5.0 || ReadPosRankSum<-5.0 || ReadPosRankSum>5.0 || SOR>5.0' --genotype-filter-name 'lowGT' --genotype-filter-expression 'DP < 20.0 || GQ <99'
 
-
 # quality filter - exclude
 gatk SelectVariants -R ref/S288C.chr.fasta.gz -V bwa_haplotypecaller_gvcf/runs.hardfilter.vcf.gz -O bwa_haplotypecaller_gvcf/runs.hardfilter.selected.vcf.gz --exclude-filtered --select-type-to-include SNP --restrict-alleles-to BIALLELIC --set-filtered-gt-to-nocall
 
@@ -334,6 +337,101 @@ gatk SelectVariants  --exclude-sample-name P3-4H --exclude-sample-name CNTRL-1F 
 bcftools annotate -x ^FORMAT/GT bwa_haplotypecaller_finalvcf/runs.diploid.vcf.gz | bgzip -c > bwa_haplotypecaller_finalvcf/runs.diploid.GTonly.vcf.gz
 bcftools query -H -f '%CHROM\t%POS\t[%GT\t]\n' bwa_haplotypecaller_finalvcf/runs.diploid.GTonly.vcf.gz | gzip -c > bwa_haplotypecaller_finalvcf/runs.diploid.vcf.tsv.gz
 
+```
+
+# CNV Analysis (GATK GermlineCNVCaller)
+```bash
+# 1. Preprocess Intervals (WGS data - binning)
+# Adjust bin-length as needed. For WGS, 1000bp is a common starting point.
+# For exome data, provide the exome targets BED file instead of --wgs.
+mkdir -p gatk_cnv gatk_cnv_results
+
+gatk PreprocessIntervals \
+  -R ref/S288C.chr.fasta.gz \
+  --padding 0 \
+  -imr OVERLAPPING_ONLY \
+  -O gatk_cnv/s288c.preprocessed.interval_list
+
+ echo -e "CONTIG_NAME\tPLOIDY_PRIOR_0\tPLOIDY_PRIOR_1\tPLOIDY_PRIOR_2\tPLOIDY_PRIOR_3" > ref/s288c.contig_ploidy_prior_table.tsv
+ awk '{print $1 "\t0.01\t0.01\t0.97\t0.01"}' ref/S288C.chr.fasta.gz.fai >> ref/s288c.contig_ploidy_prior_table.tsv
+
+# 2. Collect Read Counts
+# Use the bwa_mapping/${names[$i]}.genome.info.bam files generated earlier.
+# This step needs to be run for each sample.
+names=( $(csvtk cut -f 3 -U tables/project_id.csv) )
+for i in ${!names[@]}; do
+  bamfile=bwa_mapping/${names[$i]}.genome.info.bam
+  output_counts=gatk_cnv/${names[$i]}.counts.hdf5
+  sbatch -J collect_counts -A tyjames0 --mem=4g -o gatk_cnv/${names[$i]}.collect_counts.log \
+    --wrap="gatk CollectReadCounts \
+    -R ref/S288C.chr.fasta.gz \
+    -L gatk_cnv/s288c.preprocessed.interval_list \
+    -I ${bamfile} \
+    -imr OVERLAPPING_ONLY \
+    --format HDF5 \
+    -O ${output_counts}"
+done
+
+# Create a list of all .counts.hdf5 files for the cohort
+ls gatk_cnv/*.counts.hdf5 > gatk_cnv/cohort.counts.list
+
+# 3. Determine Germline Contig Ploidy (Cohort Mode)
+# This step builds the ploidy model from the cohort.
+# Ensure you have a sufficient number of samples for cohort mode (>=100 recommended by GATK).
+# For smaller cohorts, consider running in case mode against a pre-built panel of normals.
+
+  sbatch -J ContigPloidyCohort -A tyjames1 -c 32 --mem=64g -t 48:00:00 -o gatk_cnv/ContigPloidyCohort.log \
+ --wrap="gatk DetermineGermlineContigPloidy \
+  -L gatk_cnv/s288c.preprocessed.interval_list \
+  --interval-merging-rule OVERLAPPING_ONLY \
+  --output gatk_cnv/ \
+  --output-prefix ploidy \
+  --contig-ploidy-priors ref/s288c.contig_ploidy_prior_table.tsv \
+  --input gatk_cnv/cohort.counts.list"
+
+python scripts/combine_ploidy_results.py
+
+# 4. Call Copy Number Variants (Cohort Mode)
+# This step calls CNVs for all samples in the cohort using the ploidy model.
+# Adjust the --sharding-mode and --number-of-shards for optimal performance on your system.
+
+sbatch -J CNVCallerCohort -A tyjames1 -c 32 --mem=64g -t 48:00:00 -o gatk_cnv/CNVCallerCohort.log \
+    --wrap="gatk GermlineCNVCaller \
+  --run-mode COHORT \
+  -L gatk_cnv/s288c.preprocessed.interval_list \
+  --interval-merging-rule OVERLAPPING_ONLY \
+  --contig-ploidy-calls gatk_cnv/ploidy-calls \
+  --input gatk_cnv/cohort.counts.list \
+  --output-prefix cohort_cnv \
+  --output gatk_cnv"
+
+# 5. Postprocess Germline CNV Calls
+# Consolidate results, perform segmentation, and generate final VCFs.
+# This step needs to be run for each sample.
+
+sbatch -J IntervalListTools -A tyjames1 -c 32 --mem=64g -t 48:00:00 -o gatk_cnv/IntervalListTools.log \
+--wrap="gatk IntervalListTools \
+            -I gatk_cnv/s288c.preprocessed.interval_list\
+    --SUBDIVISION_MODE INTERVAL_COUNT \
+    --SCATTER_CONTENT 5000 \
+    --OUTPUT gatk_cnv/scatter"
+
+samples=$(find gatk_cnv/cohort_cnv-calls/SAMPLE_* -type d | grep -P -o '[^_]+$')
+for sample in $samples; do
+     gatk PostprocessGermlineCNVCalls \
+        --model-shard-path gatk_cnv/cohort_cnv-model   \
+        --calls-shard-path gatk_cnv/cohort_cnv-calls \
+        --contig-ploidy-calls gatk_cnv/ploidy-calls \
+        --sample-index $sample \
+        --output-genotyped-intervals gatk_cnv/genotyped-intervals-cohort_SAMPLE_${sample}.vcf.gz \
+        --output-genotyped-segments gatk_cnv/genotyped-segments-cohort_SAMPLE_${sample}.vcf.gz \
+        --output-denoised-copy-ratios gatk_cnv/denoised-copy-ratios_SAMPLE_${sample}.tsv \
+        --sequence-dictionary ref/S288C.chr.dict
+      done
+
+bcftools merge -O z gatk_cnv/genotyped-intervals-cohort_SAMPLE_*vcf.gz > gatk_cnv_results/genotyped-intervals-cohort.vcf.gz
+bcftools view -T ^ref/repeat_elements_flanked.bed -O z gatk_cnv_results/genotyped-intervals-cohort.vcf.gz > gatk_cnv_results/genotyped-intervals-cohort-norepeat.vcf.gz
+bcftools query -H -f '%CHROM\t%POS\t[%CN\t]\n' gatk_cnv_results/genotyped-intervals-cohort-norepeat.vcf.gz | sed 's/:CN//g' | sed 's/\t$//g' | sed -E 's/\[[0-9]+\]//g' | bgzip -c > gatk_cnv_results/genotyped-intervals-cohort-norepeat.tsv.gz
 ```
 
 # Appendix: strains excluded

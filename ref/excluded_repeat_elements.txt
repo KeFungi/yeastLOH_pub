@@ -1,0 +1,17 @@
+centromere
+centromere_DNA_Element_I
+centromere_DNA_Element_II
+centromere_DNA_Element_III
+long_terminal_repeat
+LTR_retrotransposon
+telomere
+telomeric_repeat
+transposable_element_gene
+W_region
+X_element
+X_element_combinatorial_repeat
+X_region
+Y_prime_element
+Y_region
+Z1_region
+Z2_region
