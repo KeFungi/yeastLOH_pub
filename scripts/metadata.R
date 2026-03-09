@@ -11,7 +11,7 @@ strain_tb <-
   ungroup()
 
 WGS_files <-
-  list.files(c("20240821_LOH_wholegenome2/11790-YK", "/Volumes/lsa-tyjames/mycology/next_gen_seq_data/Yeast_LOH/20240722_LOH_wholegenome1/11314-YK"), recursive = TRUE, full.names = TRUE)
+  list.files(c("/Volumes/lsa-tyjames/mycology/next_gen_seq_data/Yeast_LOH/20240821_LOH_wholegenome2/11790-YK", "/Volumes/lsa-tyjames/mycology/next_gen_seq_data/Yeast_LOH/20240722_LOH_wholegenome1/11314-YK"), recursive = TRUE, full.names = TRUE)
 
 project_SRA_tb <-
   WGS_project_tb %>%
@@ -114,28 +114,31 @@ good_strains <-
   pull(strain)
 
 fordLOH_tb <-
-  read_tsv("LOH_detect/LOH_minSNP-5.bed", col_names = FALSE) %>%
-  mutate(type="SK1")
+  read_tsv("LOH_detect/LOH_minSNP-5_typed.bed", col_names = FALSE) %>%
+  filter(X4 %in% good_strains) %>%
+  mutate(parent_type="SK1") %>%
+  rename(LOH_type=X5)
 
 revLOH_tb <-
-  read_tsv("LOH_detect/revLOH_minSNP-5.bed", col_names = FALSE) %>%
-  mutate(type="BY4741")
+  read_tsv("LOH_detect/revLOH_minSNP-5_typed.bed", col_names = FALSE) %>%
+  filter(X4 %in% good_strains) %>%
+  mutate(parent_type="BY4741") %>%
+  rename(LOH_type=X5)
 
 LOH_type_tb <-
   rbind(fordLOH_tb, revLOH_tb) %>%
   rename(chr=X1, start=X2, end=X3, strain=X4) %>%
-  mutate(length=end-start) %>%
-  filter(strain %in% c(good_strains, "P3-2C"))
+  mutate(length=end-start)
 
 loh_pos_tb <-
   LOH_type_tb %>%
-  mutate(pos_text=paste0(chr, ":", start+1, "-", end),
+  mutate(pos_text=paste0(chr, ":", start+1, "-", end, "/", LOH_type),
          length=end-start
   ) %>%
-  group_by(strain, type) %>%
+  group_by(strain, parent_type) %>%
   summarise(n_LOH=n(), LOH_length=sum(length), concat_pos_text=paste0(pos_text, collapse = "; ")) %>%
-  mutate(type_pos_text=paste0("(", type, ") ", concat_pos_text, ".")) %>%
-  arrange(type) %>%
+  mutate(type_pos_text=paste0("(", parent_type, ") ", concat_pos_text, ".")) %>%
+  arrange(parent_type) %>%
   group_by(strain) %>%
   summarise(`number of LOH`=sum(n_LOH),
             `total LOH length`=sum(LOH_length),
@@ -159,12 +162,12 @@ meta_readable_tb <-
 write_csv(meta_readable_tb, "tables/meta_table.csv")
 
 LOH_type_tb %>%
-  filter(type=="SK1") %>%
+  filter(parent_type=="SK1") %>%
   select(chr, start, end, strain) %>%
   write_tsv("tables/SK1_bedgraph_input.bed", col_names = FALSE)
 
 LOH_type_tb %>%
-  filter(type=="BY4741") %>%
+  filter(parent_type=="BY4741") %>%
   select(chr, start, end, strain) %>%
   write_tsv("tables/BY4741_bedgraph_input.bed", col_names = FALSE)
 

@@ -294,7 +294,6 @@ gzip -c -d ref/parents_rsid.tsv.gz | awk '{print $4}' > ref/parents_rsid.list
 
 cp ref/parents.raw.vcf.gz* bwa_haplotypecaller_finalvcf
 cp ref/parents.DPfilter.selected.vcf.gz* bwa_haplotypecaller_finalvcf
-
 ```
 
 # filter variants
@@ -329,6 +328,7 @@ cp bwa_haplotypecaller_gvcf/runs.GTfilter.selected.vcf.gz* bwa_haplotypecaller_f
 bcftools index -f bwa_haplotypecaller_finalvcf/genomes.final.vcf.gz
 vcftools --gzvcf bwa_haplotypecaller_finalvcf/genomes.final.vcf.gz --missing-indv --out tables/genomes.final.vcf.gz
 vcftools --gzvcf bwa_haplotypecaller_finalvcf/genomes.final.vcf.gz --het --out tables/genomes.final.vcf.gz
+vcftools --gzvcf bwa_haplotypecaller_gvcf/runs.GTfilter.selected.rsid.vcf.gz --het --out tables/runs.GTfilter.selected.rsid.vcf.gz
 vcftools --gzvcf bwa_haplotypecaller_finalvcf/genomes.final.vcf.gz --depth --out tables/genomes.final.vcf.gz
 
 # exclude haploid samples
@@ -339,99 +339,155 @@ bcftools query -H -f '%CHROM\t%POS\t[%GT\t]\n' bwa_haplotypecaller_finalvcf/runs
 
 ```
 
-# CNV Analysis (GATK GermlineCNVCaller)
+
+# alternative ref
 ```bash
-# 1. Preprocess Intervals (WGS data - binning)
-# Adjust bin-length as needed. For WGS, 1000bp is a common starting point.
-# For exome data, provide the exome targets BED file instead of --wgs.
-mkdir -p gatk_cnv gatk_cnv_results
+mkdir bwa_alt_mapping bwa_alt_haplotypecaller_gvcf alt_ref bwa_alt_haplotypecaller_finalvcf
+bcftools consensus -H A -f ref/S288C.chr.fasta.gz -s SK1 bwa_haplotypecaller_finalvcf/parents.DPfilter.selected.vcf.gz > alt_ref/S288Calt.chr.fasta.gz
+gatk CreateSequenceDictionary -R alt_ref/S288Calt.chr.fasta.gz #-O ref/S288Calt.chr.dict
+samtools faidx alt_ref/S288Calt.chr.fasta.gz
 
-gatk PreprocessIntervals \
-  -R ref/S288C.chr.fasta.gz \
-  --padding 0 \
-  -imr OVERLAPPING_ONLY \
-  -O gatk_cnv/s288c.preprocessed.interval_list
-
- echo -e "CONTIG_NAME\tPLOIDY_PRIOR_0\tPLOIDY_PRIOR_1\tPLOIDY_PRIOR_2\tPLOIDY_PRIOR_3" > ref/s288c.contig_ploidy_prior_table.tsv
- awk '{print $1 "\t0.01\t0.01\t0.97\t0.01"}' ref/S288C.chr.fasta.gz.fai >> ref/s288c.contig_ploidy_prior_table.tsv
-
-# 2. Collect Read Counts
-# Use the bwa_mapping/${names[$i]}.genome.info.bam files generated earlier.
-# This step needs to be run for each sample.
+bwa index alt_ref/S288Calt.chr.fasta.gz
 names=( $(csvtk cut -f 3 -U tables/project_id.csv) )
 for i in ${!names[@]}; do
-  bamfile=bwa_mapping/${names[$i]}.genome.info.bam
-  output_counts=gatk_cnv/${names[$i]}.counts.hdf5
-  sbatch -J collect_counts -A tyjames0 --mem=4g -o gatk_cnv/${names[$i]}.collect_counts.log \
-    --wrap="gatk CollectReadCounts \
-    -R ref/S288C.chr.fasta.gz \
-    -L gatk_cnv/s288c.preprocessed.interval_list \
-    -I ${bamfile} \
-    -imr OVERLAPPING_ONLY \
-    --format HDF5 \
-    -O ${output_counts}"
+    f1="cutadapt/${names[$i]}_R1.trim.fastq.gz"
+    f2="cutadapt/${names[$i]}_R2.trim.fastq.gz"
+    sbatch -J bwa -A tyjames1 -t 4:00:00 --mem=2g -o bwa_alt_mapping/${names[$i]}.altgenome.log --wrap="bwa mem alt_ref/S288Calt.chr.fasta.gz $f1 $f2 > bwa_alt_mapping/${names[$i]}.altgenome.sam"
 done
 
-# Create a list of all .counts.hdf5 files for the cohort
-ls gatk_cnv/*.counts.hdf5 > gatk_cnv/cohort.counts.list
+names=( $(csvtk cut -f 3 -U tables/project_id.csv) )
+for i in ${!names[@]}; do
+  samfile=bwa_alt_mapping/${names[$i]}.altgenome.sam
+  bamfile=bwa_alt_mapping/${names[$i]}.altgenome.sorted.bam
+  logfile=bwa_alt_mapping/${names[$i]}.altsort.log
+  if [[ ! -f ${bamfile}.bai ]]; then
+      sbatch -J sort_bam -A tyjames1 -t 4:00:00 --mem=2g -o $logfile --wrap="samtools view -F 4 -h $samfile | samtools sort -O BAM -o $bamfile -; samtools index $bamfile"
+  fi
+done
 
-# 3. Determine Germline Contig Ploidy (Cohort Mode)
-# This step builds the ploidy model from the cohort.
-# Ensure you have a sufficient number of samples for cohort mode (>=100 recommended by GATK).
-# For smaller cohorts, consider running in case mode against a pre-built panel of normals.
+names=( $(csvtk cut -f 3 -U tables/project_id.csv) )
+for i in ${!names[@]}; do
+  bamfile=bwa_alt_mapping/${names[$i]}.altgenome.sorted.bam
+  newbamfile=bwa_alt_mapping/${names[$i]}.altgenome.info.bam
+  logifle=bwa_alt_mapping/${names[$i]}.altinfo.log
+  if [[ ! -f bwa_alt_mapping/${names[$i]}.altgenome.info.bai ]]; then
+    sbatch -J info_bam -A tyjames0 --mem=2g -o $logifle --wrap="gatk AddOrReplaceReadGroups -I ${bamfile} -O ${newbamfile} -RGLB lib1 -RGPL illumina -RGPU unit1 -RGSM ${names[$i]} -TMP_DIR /scratch/tyjames_root/tyjames0/yihongke/; gatk BuildBamIndex -INPUT ${newbamfile}"
+  fi
+done
 
-  sbatch -J ContigPloidyCohort -A tyjames1 -c 32 --mem=64g -t 48:00:00 -o gatk_cnv/ContigPloidyCohort.log \
- --wrap="gatk DetermineGermlineContigPloidy \
-  -L gatk_cnv/s288c.preprocessed.interval_list \
-  --interval-merging-rule OVERLAPPING_ONLY \
-  --output gatk_cnv/ \
-  --output-prefix ploidy \
-  --contig-ploidy-priors ref/s288c.contig_ploidy_prior_table.tsv \
-  --input gatk_cnv/cohort.counts.list"
+names=( $(csvtk cut -f 3 -U tables/project_id.csv) )
+for i in ${!names[@]}; do
+  inbam=bwa_alt_mapping/${names[$i]}.altgenome.info.bam
+  outvcf=bwa_alt_haplotypecaller_gvcf/${names[$i]}.alt.g.vcf.gz
+  logfile=bwa_alt_haplotypecaller_gvcf/${names[$i]}_haplotypecaller.alt.log
+  if [[ ! -f bwa_alt_haplotypecaller_gvcf/${names[$i]}.alt.g.vcf.gz.tbi ]]; then
+  sbatch -J hapcaller -A tyjames1 -t 24:00:00 --mem=8g -c 1 -o ${logfile} \
+    --wrap="gatk --java-options '-Xmx8g' HaplotypeCaller \
+    --tmp-dir /scratch/tyjames_root/tyjames0/yihongke/ -R alt_ref/S288Calt.chr.fasta.gz \
+    --native-pair-hmm-threads 1 \
+    -I $inbam -O $outvcf -ploidy 2 -ERC GVCF"
+  fi
+done
 
-python scripts/combine_ploidy_results.py
 
-# 4. Call Copy Number Variants (Cohort Mode)
-# This step calls CNVs for all samples in the cohort using the ploidy model.
-# Adjust the --sharding-mode and --number-of-shards for optimal performance on your system.
+runvflag=$(awk -F, '{print $3}' tables/project_id.csv | awk 'NR>1 {print "--variant bwa_alt_haplotypecaller_gvcf/" $1 ".alt.g.vcf.gz "}' | xargs echo)
 
-sbatch -J CNVCallerCohort -A tyjames1 -c 32 --mem=64g -t 48:00:00 -o gatk_cnv/CNVCallerCohort.log \
-    --wrap="gatk GermlineCNVCaller \
-  --run-mode COHORT \
-  -L gatk_cnv/s288c.preprocessed.interval_list \
-  --interval-merging-rule OVERLAPPING_ONLY \
-  --contig-ploidy-calls gatk_cnv/ploidy-calls \
-  --input gatk_cnv/cohort.counts.list \
-  --output-prefix cohort_cnv \
-  --output gatk_cnv"
+sbatch -J combine_gvcf -t 48:00:00 -A tyjames1 -c 8 --mem=16g --wrap="gatk CombineGVCFs -R alt_ref/S288Calt.chr.fasta.gz $runvflag -O bwa_alt_haplotypecaller_gvcf/runs.alt.g.vcf.gz"
+sbatch -J genotype_gvcf -t 48:00:00 -A tyjames1 -c 8 --mem=32g --wrap="gatk GenotypeGVCFs -R alt_ref/S288Calt.chr.fasta.gz -V bwa_alt_haplotypecaller_gvcf/runs.alt.g.vcf.gz -O bwa_alt_haplotypecaller_gvcf/runs.raw.alt.vcf.gz"
 
-# 5. Postprocess Germline CNV Calls
-# Consolidate results, perform segmentation, and generate final VCFs.
-# This step needs to be run for each sample.
 
-sbatch -J IntervalListTools -A tyjames1 -c 32 --mem=64g -t 48:00:00 -o gatk_cnv/IntervalListTools.log \
---wrap="gatk IntervalListTools \
-            -I gatk_cnv/s288c.preprocessed.interval_list\
-    --SUBDIVISION_MODE INTERVAL_COUNT \
-    --SCATTER_CONTENT 5000 \
-    --OUTPUT gatk_cnv/scatter"
 
-samples=$(find gatk_cnv/cohort_cnv-calls/SAMPLE_* -type d | grep -P -o '[^_]+$')
-for sample in $samples; do
-     gatk PostprocessGermlineCNVCalls \
-        --model-shard-path gatk_cnv/cohort_cnv-model   \
-        --calls-shard-path gatk_cnv/cohort_cnv-calls \
-        --contig-ploidy-calls gatk_cnv/ploidy-calls \
-        --sample-index $sample \
-        --output-genotyped-intervals gatk_cnv/genotyped-intervals-cohort_SAMPLE_${sample}.vcf.gz \
-        --output-genotyped-segments gatk_cnv/genotyped-segments-cohort_SAMPLE_${sample}.vcf.gz \
-        --output-denoised-copy-ratios gatk_cnv/denoised-copy-ratios_SAMPLE_${sample}.tsv \
-        --sequence-dictionary ref/S288C.chr.dict
-      done
+f1="ref/SRR1569638_1.trim.fastq"
+f2="ref/SRR1569638_2.trim.fastq"
+sbatch -J SK1_bwa -A tyjames0 --mem=2g --wrap="bwa mem alt_ref/S288Calt.chr.fasta.gz $f1 $f2 > alt_ref/SK1.altgenome.sam"
 
-bcftools merge -O z gatk_cnv/genotyped-intervals-cohort_SAMPLE_*vcf.gz > gatk_cnv_results/genotyped-intervals-cohort.vcf.gz
-bcftools view -T ^ref/repeat_elements_flanked.bed -O z gatk_cnv_results/genotyped-intervals-cohort.vcf.gz > gatk_cnv_results/genotyped-intervals-cohort-norepeat.vcf.gz
-bcftools query -H -f '%CHROM\t%POS\t[%CN\t]\n' gatk_cnv_results/genotyped-intervals-cohort-norepeat.vcf.gz | sed 's/:CN//g' | sed 's/\t$//g' | sed -E 's/\[[0-9]+\]//g' | bgzip -c > gatk_cnv_results/genotyped-intervals-cohort-norepeat.tsv.gz
+f1="ref/SRR1569870_1.trim.fastq"
+f2="ref/SRR1569870_2.trim.fastq"
+sbatch -J BY4741_bwa -A tyjames0 --mem=2g --wrap="bwa mem alt_ref/S288Calt.chr.fasta.gz $f1 $f2 > alt_ref/BY4741.altgenome.sam"
+
+samfile=ref/SK1.altgenome.sam
+bamfile=ref/SK1.altgenome.sorted.bam
+sbatch -J SK1_sort_bam -A tyjames0 --mem=2g -c 8 --wrap="samtools view -F 4 -h $samfile | samtools sort -O BAM -o $bamfile -; samtools index $bamfile"
+
+samfile=ref/BY4741.altgenome.sam
+bamfile=ref/BY4741.altgenome.sorted.bam
+sbatch -J BY4741_sort_bam -A tyjames0 --mem=2g -c 8 --wrap="samtools view -F 4 -h $samfile | samtools sort -O BAM -o $bamfile -; samtools index $bamfile"
+
+
+bamfile=alt_ref/SK1.altgenome.sorted.bam
+newbamfile=alt_ref/SK1.altgenome.info.bam
+sbatch -J SK1_info_bam -A tyjames0 --mem=2g -c 8 --wrap="picard AddOrReplaceReadGroups I=${bamfile} O=${newbamfile} RGLB=ref RGPL=illumina RGPU=unit1 RGSM=SK1 TMP_DIR=/scratch/tyjames_root/tyjames0/yihongke/; picard BuildBamIndex INPUT=${newbamfile}"
+
+bamfile=alt_ref/BY4741.altgenome.sorted.bam
+newbamfile=alt_ref/BY4741.altgenome.info.bam
+sbatch -J BY4741_info_bam -A tyjames0 --mem=2g -c  8 --wrap="picard AddOrReplaceReadGroups I=${bamfile} O=${newbamfile} RGLB=ref RGPL=illumina RGPU=unit1 RGSM=BY4741 TMP_DIR=/scratch/tyjames_root/tyjames0/yihongke/; picard BuildBamIndex INPUT=${newbamfile}"
+
+
+inbam=alt_ref/SK1.altgenome.info.bam
+outvcf=alt_ref/SK1.alt.g.vcf.gz
+sbatch -J SK1_hapcaller -A tyjames1 -t 48:00:00 --mem=8g -c 4 --wrap="gatk --java-options '-Xmx8g' HaplotypeCaller --tmp-dir /scratch/tyjames_root/tyjames0/yihongke/ -R alt_ref/S288Calt.chr.fasta.gz -I $inbam -O $outvcf -ploidy 2 -ERC GVCF"
+
+inbam=alt_ref/BY4741.altgenome.info.bam
+outvcf=alt_ref/BY4741.alt.g.vcf.gz
+sbatch -J BY4741_hapcaller -A tyjames1 -t 48:00:00 --mem=8g -c 4 --wrap="gatk --java-options '-Xmx8g' HaplotypeCaller --tmp-dir /scratch/tyjames_root/tyjames0/yihongke/ -R alt_ref/S288Calt.chr.fasta.gz -I $inbam -O $outvcf -ploidy 2 -ERC GVCF"
+
+sbatch -J combine_gvcf -t 48:00:00 -A tyjames0 -c 4 --mem=8g --wrap="gatk CombineGVCFs -R alt_ref/S288Calt.chr.fasta.gz --variant alt_ref/BY4741.alt.g.vcf.gz --variant alt_ref/SK1.alt.g.vcf.gz -O alt_ref/parents.alt.g.vcf.gz"
+
+gatk GenotypeGVCFs -R alt_ref/S288Calt.chr.fasta.gz -V alt_ref/parents.alt.g.vcf.gz -O alt_ref/parents.raw.alt.vcf.gz
+gatk VariantFiltration -R alt_ref/S288Calt.chr.fasta.gz -V alt_ref/parents.raw.alt.vcf.gz -O alt_ref/parents.hardfilter.alt.vcf.gz --filter-name hard_filters --filter-expression 'BaseQRankSum<-5.0 || BaseQRankSum>5.0 || MQ<59.0 || QD<5.0 || FS>5.0 || ReadPosRankSum<-5.0 || ReadPosRankSum>5.0 || SOR>5.0'
+
+gatk SelectVariants -R alt_ref/S288Calt.chr.fasta.gz -V alt_ref/parents.hardfilter.alt.vcf.gz -O alt_ref/parents.hardfilter.selected.alt.vcf.gz --exclude-filtered --select-type-to-include SNP --restrict-alleles-to BIALLELIC --exclude-non-variants
+
+gatk VariantFiltration -R alt_ref/S288Calt.chr.fasta.gz -V alt_ref/parents.hardfilter.selected.alt.vcf.gz -O alt_ref/parents.DPfilter.alt.vcf.gz --genotype-filter-name 'isHetFilter' --genotype-filter-expression 'isHet == 1' --genotype-filter-name 'lowGT' --genotype-filter-expression 'DP < 20.0 || GQ <99'
+
+gatk SelectVariants -R alt_ref/S288Calt.chr.fasta.gz -V alt_ref/parents.DPfilter.alt.vcf.gz -O alt_ref/parents.DPfilter.selected.alt.vcf.gz --exclude-filtered --select-type-to-include SNP --restrict-alleles-to BIALLELIC --exclude-non-variants --set-filtered-gt-to-nocall
+
+# make parent rsid list for filtering experiment genomes
+echo -e "#CHROM\tPOS\tALT\tID" > alt_ref/parents_rsid.tsv
+bcftools query -f '%CHROM\t%POS\t%ALT[\t%GT]\n' alt_ref/parents.DPfilter.selected.alt.vcf.gz | awk '($4=="1/1" || $4=="1|1") && ($5=="0/0" || $5=="0|0") {print $1 "\t" $2 "\t" $3 "\trs" NR}' >> alt_ref/parents_rsid.tsv
+bgzip -f alt_ref/parents_rsid.tsv
+tabix -s 1 -b 2 -e 2 alt_ref/parents_rsid.tsv.gz
+gzip -c -d alt_ref/parents_rsid.tsv.gz | awk '{print $4}' > alt_ref/parents_rsid.list
+
+cp alt_ref/parents.raw.alt.vcf.gz* bwa_alt_haplotypecaller_finalvcf
+cp alt_ref/parents.DPfilter.selected.alt.vcf.gz* bwa_alt_haplotypecaller_finalvcf
+
+# quality filter - flag
+
+gatk VariantFiltration -R ref/S288Calt.chr.fasta.gz -V bwa_alt_haplotypecaller_gvcf/runs.raw.alt.vcf.gz -O bwa_alt_haplotypecaller_gvcf/runs.hardfilter.alt.vcf.gz --filter-name hard_filters --filter-expression 'BaseQRankSum<-5.0 || BaseQRankSum>5.0 || MQ<59.0 || QD<5.0 || FS>5.0 || ReadPosRankSum<-5.0 || ReadPosRankSum>5.0 || SOR>5.0' --genotype-filter-name 'lowGT' --genotype-filter-expression 'DP < 20.0 || GQ <99'
+
+# quality filter - exclude
+gatk SelectVariants -R ref/S288Calt.chr.fasta.gz -V bwa_alt_haplotypecaller_gvcf/runs.hardfilter.alt.vcf.gz  -O bwa_alt_haplotypecaller_gvcf/runs.hardfilter.selected.alt.vcf.gz --exclude-filtered --select-type-to-include SNP --restrict-alleles-to BIALLELIC --set-filtered-gt-to-nocall
+
+# AF filter - flag
+gatk VariantFiltration -R ref/S288Calt.chr.fasta.gz -V bwa_alt_haplotypecaller_gvcf/runs.hardfilter.selected.alt.vcf.gz -O bwa_alt_haplotypecaller_gvcf/runs.GTfilter.alt.vcf.gz --genotype-filter-name 'lowGT' --genotype-filter-expression 'DP < 20.0 || GQ <99' --filter-name AF_filters --filter-expression 'AN<386.0 || AF<0.45 || AF> 0.55' 
+
+
+bcftools query -f '%INFO/AN\t' bwa_alt_haplotypecaller_gvcf/runs.hardfilter.selected.alt.vcf.gz > alt.an.txt
+bcftools query -f '%INFO/AN\t' bwa_haplotypecaller_gvcf/runs.hardfilter.selected.vcf.gz > ref.an.txt
+scan("alt.an.txt", what=character()) %>% table() %>% .[-1] %>% as.data.frame() %>% rename(., AN=`.`) %>% mutate(AN=as.numeric(as.character(AN))) %>% arrange(AN) %>% mutate(sum_AN=AN/sum(AN), cumsum_AN=cumsum(AN)/sum(AN))
+
+# AF filter - exclude
+gatk SelectVariants -R ref/S288C.chr.fasta.gz -V bwa_alt_haplotypecaller_gvcf/runs.GTfilter.alt.vcf.gz -O bwa_alt_haplotypecaller_gvcf/runs.GTfilter.selected.alt.vcf.gz --exclude-filtered --select-type-to-include SNP --set-filtered-gt-to-nocall --restrict-alleles-to BIALLELIC --exclude-non-variants
+
+# name variants by position
+bcftools annotate -a alt_ref/parents_rsid.tsv.gz -Oz -c CHROM,POS,ALT,ID -o bwa_alt_haplotypecaller_gvcf/runs.GTfilter.selected.rsid.alt.vcf.gz  bwa_alt_haplotypecaller_gvcf/runs.GTfilter.alt.vcf.gz
+gatk IndexFeatureFile -I bwa_alt_haplotypecaller_gvcf/runs.GTfilter.selected.rsid.alt.vcf.gz
+
+# filter by detected SK1-BY4741 variants
+gatk SelectVariants -R ref/S288Calt.chr.fasta.gz -V bwa_alt_haplotypecaller_gvcf/runs.GTfilter.selected.rsid.alt.vcf.gz -O bwa_alt_haplotypecaller_gvcf/genomes.final.alt.vcf.gz --exclude-filtered --select-type-to-include SNP --set-filtered-gt-to-nocall --restrict-alleles-to BIALLELIC --keep-ids alt_ref/parents_rsid.list
+
+cp bwa_alt_haplotypecaller_gvcf/genomes.final.alt.vcf.gz* bwa_alt_haplotypecaller_finalvcf
+cp bwa_alt_haplotypecaller_gvcf/runs.raw.alt.vcf.gz* bwa_alt_haplotypecaller_finalvcf
+
+bcftools index -f bwa_alt_haplotypecaller_gvcf/genomes.final.alt.vcf.gz
+
+# exclude haploid samples
+gatk SelectVariants  --exclude-sample-name P3-4H --exclude-sample-name CNTRL-1F --exclude-sample-name P1-11F --exclude-sample-name P1-7B --exclude-sample-name P2-2D -R alt_ref/S288Calt.chr.fasta.gz -V bwa_alt_haplotypecaller_finalvcf/genomes.final.alt.vcf.gz -O bwa_alt_haplotypecaller_finalvcf/runs.diploid.alt.vcf.gz
+
+bcftools annotate -x ^FORMAT/GT bwa_alt_haplotypecaller_finalvcf/runs.diploid.alt.vcf.gz | bgzip -c > bwa_alt_haplotypecaller_finalvcf/runs.diploid.GTonly.alt.vcf.gz
+bcftools query -H -f '%CHROM\t%POS\t[%GT\t]\n' bwa_alt_haplotypecaller_finalvcf/runs.diploid.GTonly.alt.vcf.gz | gzip -c > bwa_alt_haplotypecaller_finalvcf/runs.diploid.alt.vcf.tsv.gz
+
 ```
 
 # Appendix: strains excluded
@@ -571,53 +627,3 @@ for i in "Acidic" "Caffeine" "H2O2" "SC" "YPD-30C" "YPD-37C" "worm-20C"; do
   bedtools genomecov -bg -i <(bedtools sort -i <(cat top5_list/$i/revLOH*)) -g <(awk -v OFS='\t' '{print $1, $2}' ref/S288C.chr.fasta.gz.fai) > top5_list/revLOH.$i.bedgraph
   done
 ```
-
-file to archive
-
-
-ref/repeat_region.bed
-ref/centromere.bed
-ref/repeat_region.intervals
-/nfs/turbo/lsa-tyjames/mycology/next_gen_seq_data/Yeast_LOH/20240722_LOH_wholegenome1/11314-YK/ .
-/nfs/turbo/lsa-tyjames/mycology/next_gen_seq_data/Yeast_LOH/20240821_LOH_wholegenome2/11790-YK/ .
-tables/project_id.csv
-
-
-index ref/S288C.chr.fasta.gz
-bwa_mapping/${names[$i]}.genome.info.bam
-
-bwa_haplotypecaller_gvcf/runs.raw.vcf.gz
-pub_tables/barcode_map.csv
-tables/barcode_map_parsed.csv
-
-ref/parents.raw.vcf.gz
-
-bwa_haplotypecaller_finalvcf/parents.raw.vcf.gz*
-bwa_haplotypecaller_finalvcf/parents.DPfilter.selected.vcf.gz*
-
-bwa_haplotypecaller_finalvcf
-
-pub_tables/barseq_fastq_path.csv
-
-
-./scripts/combine_barseq_exps.py
-
-bwa_haplotypecaller_finalvcf/runs.GTfilter.selected.named.vcf.gz bwa_haplotypecaller_gvcf/runs.GTfilter.selected.vcf.gz
-
-bwa_haplotypecaller_finalvcf/runs.GTfilter.selected.named.vcf.gz bwa_haplotypecaller_finalvcf/runs.GTfilter.selected.vcf.gz
-
-tables/SK1_bedgraph_input.bed 
-
-LOH_detect/forward.depth.bedgraph
-
-LOH_detect/
-
-top5_list
-
-ref/
-
-bwa_mapping_depth/
-
-ref/parents_rsid.list 
-
-tables/genomes.final.vcf.gz het hom miss

@@ -155,6 +155,9 @@ def convert_and_write_bed_cleaned(consecutive_data, n, n_disrupt, outfile, logfi
                 else:
                   #block_start = midpoint(last_hom_position, position, round_up=True)
                   block_start = last_hom_position
+        # After processing all rows for the current individual, finalize any active block
+        if inblock and max_consecutive_count >= n:
+            bed_rows.append([current_chromosome, block_start - 1, block_end, individual_id])
     for block in bed_rows:
       individual_block_counts[block[3]] += 1
       block_size = int(block[2]) - int(block[1])
@@ -195,7 +198,7 @@ def convert_and_write_bed_cleaned(consecutive_data, n, n_disrupt, outfile, logfi
 
 
 #usage
-n_list = [5]  # The threshold for the number of consecutive sites
+n_list = [3]  # The threshold for the number of consecutive sites
 file_path = 'bwa_haplotypecaller_finalvcf/runs.diploid.vcf.tsv.gz'
 
 # Run the function to process the file with header handling
@@ -217,5 +220,28 @@ for n in n_list:
 
     # Convert and write the result to the specified file path and generate the report
     convert_and_write_bed_cleaned(output_data_with_header, n, 30, outfile, logfile)
+
+file_path = 'bwa_alt_haplotypecaller_finalvcf/runs.diploid.alt.vcf.tsv.gz'
+
+# Run the function to process the file with header handling
+output_data_with_header = count_consecutive_homozygous_with_header(file_path, ["0/0", "0|0"], [])
+
+for n in n_list:
+    outfile = f'alt_LOH_detect/LOH_minSNP-{n}.bed'  # Set the desired output .bed file path
+    logfile = f'alt_LOH_detect/LOH_minSNP-{n}.log'  # Set the desired output log file path
+
+    # Convert and write the result to the specified file path and generate the report
+    convert_and_write_bed_cleaned(output_data_with_header, n, 30, outfile, logfile)
+    
+# Run the function to process the file with header handling
+output_data_with_header = count_consecutive_homozygous_with_header(file_path, ["1/1", "1|1"], [])
+
+for n in n_list:
+    outfile = f'alt_LOH_detect/revLOH_minSNP-{n}.bed'  # Set the desired output .bed file path
+    logfile = f'alt_LOH_detect/revLOH_minSNP-{n}.log'  # Set the desired output log file path
+
+    # Convert and write the result to the specified file path and generate the report
+    convert_and_write_bed_cleaned(output_data_with_header, n, 30, outfile, logfile)
+
 
 
